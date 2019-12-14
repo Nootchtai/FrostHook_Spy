@@ -13,7 +13,6 @@
 ~ KNOWN BUGS ~
     * Dropdown showing up even when not hovered on a target frame.
     * PROTMOSASHER: Can't track Http (they're protected)
-    * PROTOSMASHER: lack of replaceclosure (LOL), just means that you can't :Destroy() the spy properly, hooks will remain.
 ~ FIXED ~
 	* Fixed dropdown menu not working sometimes.
 
@@ -24,7 +23,6 @@ Not yet implemented:
     /shrug
 --[==[Mandatory Functions for operation]==]--
         * hookfunction
-        * replaceclosure
         * newcclosure
         * getreg
         * setclipboard
@@ -109,7 +107,6 @@ local FrostHook = {
         new_cclosure = newcclosure or function(t) return t end or false, -- why proto why
         to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false, --
         check_caller = checkcaller or is_protosmasher_caller or false, --
-        replace_closure = replaceclosure or function(a,b) end or false, -- ugh why doesn't proto have this
     },
     Services = setmetatable({},{__index = function(self, index)
         return game:GetService(index) or nil;
@@ -442,7 +439,7 @@ do -- FrostHook Main Object
             for class,func in pairs(to_fix) do
                 for ref,hook in pairs(self.Hook_Cache) do
                     if class == ref then
-                        self.env.replace_closure(func, hook);
+                        self.env.hook_function(func, hook);
                     end
                 end
             end
@@ -450,7 +447,7 @@ do -- FrostHook Main Object
             for name,func in pairs(self.HttpFuncRef) do
                 for ref,hook in pairs(self.Hook_Cache) do
                     if name == ref then
-                        self.env.replace_closure(func, hook);
+                        self.env.hook_function(func, hook);
                     end
                 end
             end
