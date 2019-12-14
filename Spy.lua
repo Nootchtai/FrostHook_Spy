@@ -11,7 +11,9 @@
 ~ Nootchtai; 12/13/2019;
 
 ~ KNOWN BUGS ~
-	* Dropdown showing up even when not hovered on a target frame.
+    * Dropdown showing up even when not hovered on a target frame.
+    * PROTMOSASHER: Can't track Http (they're protected)
+    * PROTOSMASHER: lack of replaceclosure (LOL), just means that you can't :Destroy() the spy properly, hooks will remain.
 ~ FIXED ~
 	* Fixed dropdown menu not working sometimes.
 
@@ -95,20 +97,19 @@ local FrostHook = {
         Max = UDim2.new(0,800,0,500)
     },
     env = { -- Inherited from Hydroxide.
-        get_upvalues = debug.getupvalues or getupvalues or getupvals or false,
-        get_upvalue = debug.getupvalue or getupvalue or getupval or false,
-        get_metatable = getrawmetatable or debug.getmetatable or false,
-        get_namecall = getnamecallmethod or get_namecall_method or false,
-        get_reg = getreg or debug.getregistry or false,
-        set_namecall = setnamecallmethod or set_namecall_method or false,
-        set_readonly = setreadonly or make_writeable or false,
-        is_l_closure = islclosure or is_l_closure or (iscclosure and function(closure) return not iscclosure(closure) end) or false,
-        is_x_closure = is_synapse_function or is_protosmasher_closure or issentinelclosure or false,
-        hook_function = hookfunction or hookfunc or detour_function or false,
-        new_cclosure = newcclosure or false,
-        to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false,
-        check_caller = checkcaller or false,
-        replace_closure = replaceclosure or false,
+        get_upvalues = debug.getupvalues or getupvalues or getupvals or false, -- 
+        get_upvalue = debug.getupvalue or getupvalue or getupval or false, --
+        get_metatable = getrawmetatable or debug.getmetatable or false, --
+        get_namecall = getnamecallmethod or get_namecall_method or false, --
+        get_reg = getreg or debug.getregistry or false, --
+        set_readonly = setreadonly or ((make_writeable and make_readonly) and function(t,b) if b then return make_readonly(t) else return make_writeable(t) end end) or false, --
+        is_l_closure = islclosure or is_l_closure or (iscclosure and function(closure) return not iscclosure(closure) end) or false, --
+        is_x_closure = is_synapse_function or is_protosmasher_closure or issentinelclosure or false, --
+        hook_function = hookfunction or hookfunc or detour_function or false, --
+        new_cclosure = newcclosure or function(t) return t end or false, -- why proto why
+        to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false, --
+        check_caller = checkcaller or is_protosmasher_caller or false, --
+        replace_closure = replaceclosure or function(a,b) end or false, -- ugh why doesn't proto have this
     },
     Services = setmetatable({},{__index = function(self, index)
         return game:GetService(index) or nil;
@@ -351,17 +352,19 @@ do -- FrostHook Main Object
         TrackHttp = function(self)
             for name,func in pairs(self.HttpFuncRef) do
                 if self.Monitoring[name] then
-                    local temp_hook;
-                    temp_hook = self.env.hook_function(func, self.env.new_cclosure(function(req, ...)
-                        local varargs = {...}
-                        if self.HttpCache[name] and self.HttpCache[name].Spying then
-                            self:RequestCache(name, varargs);
-                        elseif not self.HttpCache[name] then
-                            self:RequestCache(name, varargs);
-                        end
-                        return temp_hook(name, ...)
-                    end))
-                    self.Hook_Cache[name] = temp_hook;
+                    pcall(function()
+                        local temp_hook;
+                        temp_hook = self.env.hook_function(func, self.env.new_cclosure(function(req, ...)
+                            local varargs = {...}
+                            if self.HttpCache[name] and self.HttpCache[name].Spying then
+                                self:RequestCache(name, varargs);
+                            elseif not self.HttpCache[name] then
+                                self:RequestCache(name, varargs);
+                            end
+                            return temp_hook(name, ...)
+                        end))
+                        self.Hook_Cache[name] = temp_hook;
+                    end);
                 end
             end
         end,
