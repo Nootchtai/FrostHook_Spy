@@ -8,7 +8,12 @@
 | )      | ) \ \__| (___) |/\____) |   | |   | )   ( || (___) || (___) ||  /  \ \  /\____) || )         | |   
 |/       |/   \__/(_______)\_______)   )_(   |/     \|(_______)(_______)|_/    \/  \_______)|/          \_/   
 
-~ Nootchtai; 12/12/2019;
+~ Nootchtai; 12/13/2019;
+
+~ KNOWN BUGS ~
+	* Dropdown showing up even when not hovered on a target frame.
+~ FIXED ~
+	* Fixed dropdown menu not working sometimes.
 
 Possbile future features:
     Upvalue scanning
@@ -93,13 +98,13 @@ local FrostHook = {
         get_upvalues = debug.getupvalues or getupvalues or getupvals or false,
         get_upvalue = debug.getupvalue or getupvalue or getupval or false,
         get_metatable = getrawmetatable or debug.getmetatable or false,
-        get_namecall = getnamecallmethod or false,
+        get_namecall = getnamecallmethod or get_namecall_method or false,
         get_reg = getreg or debug.getregistry or false,
-        set_namecall = setnamecallmethod or false,
+        set_namecall = setnamecallmethod or set_namecall_method or false,
         set_readonly = setreadonly or make_writeable or false,
-        is_l_closure = islclosure or (iscclosure and function(closure) return not iscclosure(closure) end) or false,
+        is_l_closure = islclosure or is_l_closure or (iscclosure and function(closure) return not iscclosure(closure) end) or false,
         is_x_closure = is_synapse_function or is_protosmasher_closure or issentinelclosure or false,
-        hook_function = hookfunction or hookfunc or false,
+        hook_function = hookfunction or hookfunc or detour_function or false,
         new_cclosure = newcclosure or false,
         to_clipboard = (syn and syn.write_clipboard) or writeclipboard or toclipboard or setclipboard or false,
         check_caller = checkcaller or false,
@@ -811,7 +816,7 @@ do -- FrostHook Main Object
 
             local function CallDropdown(remote, string_func, varargs)
                 if Spy:FindFirstChild("CallDropdown") then
-                    Spy.Call_Dropdown:Destroy();
+                    Spy.CallDropdown:Destroy();
                 end
                 local this_dropdown = Templates.CallDropdown:Clone();
                 this_dropdown.Position = UDim2.new(0,Mouse.X - 5,0,Mouse.Y - 5)
@@ -882,7 +887,7 @@ do -- FrostHook Main Object
 
             local function HTTPCallDropdown(reqtype, varargs)
                 if Spy:FindFirstChild("CallDropdown") then
-                    Spy.Call_Dropdown:Destroy();
+                    Spy.CallDropdown:Destroy();
                 end
                 local this_dropdown = Templates.CallDropdown:Clone();
                 this_dropdown.Position = UDim2.new(0,Mouse.X - 5,0,Mouse.Y - 5)
